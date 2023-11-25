@@ -16,7 +16,7 @@
             <el-dropdown-menu>
               <el-dropdown-item command="profile" @click="dialogVisible8 = true">个人信息</el-dropdown-item>
               <el-dropdown-item command="settings" @click="dialogVisible9 = true">分享管理</el-dropdown-item>
-              <el-dropdown-item command="logout" @click="dialogVisible10 = true">登出</el-dropdown-item>
+              <el-dropdown-item command="logout" @click="logout">登出</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -184,14 +184,6 @@
               </el-form-item>
             </el-form>
           </el-dialog>
-          <el-dialog v-model="dialogVisible10" title="登出">
-            <el-form>
-              <el-form-item>
-
-              </el-form-item>
-            </el-form>
-          </el-dialog>
-
         </el-main>
       </el-container>
     </el-container>
@@ -202,7 +194,7 @@
 import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search } from '@element-plus/icons-vue'
 import { ref, reactive, toRefs } from 'vue'
 import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
-//import type { TableColumnCtx } from 'element-plus'
+import { useRouter } from 'vue-router'
 import type { UploadProps, UploadUserFile } from 'element-plus'
 
 interface User {
@@ -224,9 +216,9 @@ const dialogVisible6 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
-const dialogVisible10 = ref(false)
 const input1 = ref('')
 const input2 = ref('')
+const router = useRouter();
 
 const refreshPage = () => {
   window.location.reload()
@@ -293,7 +285,6 @@ const beforeRemove: UploadProps['beforeRemove'] = (uploadFile, uploadFiles) => {
     () => false
   )
 }
-
 const onSubmit1 = () => {
   console.log('submit!')
 }
@@ -306,7 +297,11 @@ const onSubmit3 = () => {
 const onSubmit4 = () => {
   console.log('submit!')
 }
-
+const logout = () => {
+  // 清除 token 并跳转到登录页面
+  localStorage.removeItem('token');
+  router.push('/login');
+}
 const tableData: User[] = [
   {
     date: "Tom1",
@@ -372,7 +367,6 @@ const gridData = [
 .input-with-select .el-input-group__prepend {
   border-radius: 100px;
   box-shadow: none;
-  /* background-color: gray; */
 }
 
 .input-with-select .el-input__wrapper {

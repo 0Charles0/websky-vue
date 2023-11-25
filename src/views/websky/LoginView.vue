@@ -10,10 +10,14 @@
         </el-form-item>
         <el-row justify="space-evenly">
             <el-col :span="4">
-                <el-button type="primary" @click="login">登录</el-button>
+                <el-button type="primary" @click="login" :loading="loading1" style="width:100%">
+                    <p v-if="!loading1">登录</p>
+                </el-button>
             </el-col>
             <el-col :span="4">
-                <el-button type="info" @click="register">注册</el-button>
+                <el-button type="info" @click="register" :loading="loading2" style="width:100%">
+                    <p v-if="!loading2">注册</p>
+                </el-button>
             </el-col>
         </el-row>
     </el-form>
@@ -22,38 +26,45 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import axios from 'axios'
-import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 const input1 = ref('')
 const input2 = ref('')
-const store = useStore();
-const router = useRouter();
+const router = useRouter()
+const loading1 = ref(false)  // 添加 loading 变量
+const loading2 = ref(false)
 const login = async () => {
     try {
+        // 在登录开始时设置 loading 为 true
+        loading1.value = true;
+
         const loginData = {
             email: input1.value,
             password: input2.value
         }
         const result = await axios.post('http://localhost:8081/login', loginData)
-        console.log(result.data)
-        // 存储 token 到 localStorage
-        localStorage.setItem('token', result.data.data);
-        // 存储 token 到 Vuex
-        store.commit('setToken', result.data.data);
-        // 跳转到其他页面
-        router.push('/');
+        if (result.data.code !== 401) {
+            // 存储 token 到 localStorage
+            localStorage.setItem('token', result.data.data);
+            // 跳转到其他页面
+            router.push('/');
+        }
     } catch (error) {
-        alert("Error：请求失败")
-        console.error('Error：', "请求失败")
+        ElMessage.error("Error：请求失败")
+    } finally {
+        // 无论操作成功还是失败，最终将 loading 设置为 false
+        loading1.value = false;
     }
 }
 const register = async () => {
     try {
+        loading2.value = true;
         const result = await axios.get('http://localhost:8081/hello')
         console.log(result.data)
     } catch (error) {
-        alert("Error：请求失败")
-        console.error('Error：', "请求失败")
+        ElMessage.error("Error：请求失败")
+    } finally {
+        loading2.value = false;
     }
 }
 </script>
