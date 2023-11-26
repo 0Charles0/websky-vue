@@ -32,7 +32,9 @@ axios.interceptors.response.use(
       localStorage.removeItem('token');
       router.push('/login');
     }
-
+    else if(response.data.code === 400){
+      ElMessage.error("Error："+response.data.msg)
+    }
     return response;
   },
   (error) => {

@@ -36,7 +36,7 @@ const loading2 = ref(false)
 const login = async () => {
     try {
         // 在登录开始时设置 loading 为 true
-        loading1.value = true;
+        loading1.value = true
 
         const loginData = {
             email: input1.value,
@@ -47,19 +47,23 @@ const login = async () => {
             // 存储 token 到 localStorage
             localStorage.setItem('token', result.data.data);
             // 跳转到其他页面
-            router.push('/');
+            router.push('/')
         }
     } catch (error) {
         ElMessage.error("Error：请求失败")
     } finally {
         // 无论操作成功还是失败，最终将 loading 设置为 false
-        loading1.value = false;
+        loading1.value = false
     }
 }
 const register = async () => {
     try {
-        loading2.value = true;
-        const result = await axios.get('http://localhost:8081/hello')
+        loading2.value = true
+        const registerData = {
+            email: input1.value,
+            password: input2.value
+        }
+        const result = await axios.post('http://localhost:8081/register', registerData)
         console.log(result.data)
     } catch (error) {
         ElMessage.error("Error：请求失败")
