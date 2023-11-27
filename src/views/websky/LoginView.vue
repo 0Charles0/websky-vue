@@ -42,15 +42,15 @@ const login = async () => {
             email: input1.value,
             password: input2.value
         }
-        const result = await axios.post('http://localhost:8081/login', loginData)
-        if (result.data.code !== 401) {
+        const result = await axios.post('http://localhost:8081/user/login', loginData)
+        if (result.data.code === 200) {
             // 存储 token 到 localStorage
             localStorage.setItem('token', result.data.data);
             // 跳转到其他页面
             router.push('/')
         }
     } catch (error) {
-        ElMessage.error("Error：请求失败")
+        ElMessage.error("408 Error：请求超时")
     } finally {
         // 无论操作成功还是失败，最终将 loading 设置为 false
         loading1.value = false
@@ -63,10 +63,12 @@ const register = async () => {
             email: input1.value,
             password: input2.value
         }
-        const result = await axios.post('http://localhost:8081/register', registerData)
-        console.log(result.data)
+        const result = await axios.post('http://localhost:8081/user/register', registerData)
+        if (result.data.code === 200) {
+            ElMessage.success(result.data.data)
+        }
     } catch (error) {
-        ElMessage.error("Error：请求失败")
+        ElMessage.error("408 Error：请求超时")
     } finally {
         loading2.value = false;
     }

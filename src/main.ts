@@ -26,14 +26,13 @@ axios.interceptors.request.use(
 // 设置 axios 响应拦截器
 axios.interceptors.response.use(
   (response) => {
-    if (response.data.code === 401) {
-      ElMessage.error("Error："+response.data.msg)
-      // 处理 401 错误，清除 token 并跳转到登录页面
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
-    else if(response.data.code === 400){
-      ElMessage.error("Error："+response.data.msg)
+    if(response.data.code!==200){
+      ElMessage.error(response.data.code+" Error："+response.data.msg)
+      if (response.data.code === 401 || response.data.code === 403) {
+        // 处理 401/403 错误，清除 token 并跳转到登录页面
+        localStorage.removeItem('token');
+        router.push('/login');
+      }
     }
     return response;
   },

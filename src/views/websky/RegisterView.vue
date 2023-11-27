@@ -15,7 +15,7 @@ onMounted(async () => {
             email: captcha[0],
             code: captcha[1]
         }
-        const response = await axios.patch('http://localhost:8081/register/status', captchaData)
+        const response = await axios.patch('http://localhost:8081/user/register/verify', captchaData)
         console.log('请求成功：', response.data)
         // 处理请求成功的逻辑
     } catch (error) {
