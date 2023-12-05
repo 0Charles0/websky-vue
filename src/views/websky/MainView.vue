@@ -102,9 +102,8 @@
           </el-table>
 
           <el-dialog v-model="dialogVisible1" title="上传列表">
-            <el-upload v-model:file-list="fileList" class="upload-demo"
-              action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15" multiple :on-preview="handlePreview"
-              :on-remove="handleRemove" :before-remove="beforeRemove" :limit="10" :on-exceed="handleExceed">
+            <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
+              multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed" :before-upload="beforeUpload">
               <el-button type="primary">点击上传</el-button>
               <template #tip>
                 <div class="el-upload__tip">
@@ -193,9 +192,10 @@
 <script lang="ts" setup>
 import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search } from '@element-plus/icons-vue'
 import { ref, reactive, toRefs } from 'vue'
-import { ElTable, ElMessage, ElMessageBox } from 'element-plus'
+import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
 import type { UploadProps, UploadUserFile } from 'element-plus'
+import axios from 'axios'
 
 interface User {
   date: string
@@ -251,19 +251,21 @@ const handleCommand = (command: string) => {
   }
 };
 const fileList = ref<UploadUserFile[]>([
-  {
+  /* {
     name: 'element-plus-logo.svg',
     url: 'https://element-plus.org/images/element-plus-logo.svg',
   },
   {
     name: 'element-plus-logo2.svg',
     url: 'https://element-plus.org/images/element-plus-logo.svg',
-  },
+  }, */
 ])
 
-const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
-  console.log(file, uploadFiles)
-}
+/* const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
+  if (file && file.status === 'success') {
+    console.log(uploadFiles)
+  }
+} */
 
 const handlePreview: UploadProps['onPreview'] = (uploadFile) => {
   console.log(uploadFile)
@@ -276,7 +278,7 @@ const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
   )
 }
 
-const beforeRemove: UploadProps['beforeRemove'] = (uploadFile, uploadFiles) => {
+/* const beforeRemove: UploadProps['beforeRemove'] = (uploadFile, uploadFiles) => {
   console.log(uploadFiles)
   return ElMessageBox.confirm(
     `Cancel the transfer of ${uploadFile.name} ?`
@@ -284,7 +286,26 @@ const beforeRemove: UploadProps['beforeRemove'] = (uploadFile, uploadFiles) => {
     () => true,
     () => false
   )
-}
+} */
+const beforeUpload: UploadProps['beforeUpload'] = (file) => {
+  // 创建一个 FormData 对象，用于将文件上传到服务器
+  const formData = new FormData();
+  // 将文件追加到 FormData 中，注意 'file' 参数需要和后端接口中接收文件的参数名一致
+  formData.append('file', file);
+  // 使用 Axios 发起文件上传请求
+  axios.post('http://localhost:8081/file/upload', formData)
+    .then(response => {
+      // 处理上传成功的逻辑
+      console.log('Upload success:', response);
+    })
+    .catch(error => {
+      // 处理上传失败的逻辑
+      console.error('Upload error:', error);
+    });
+  // 阻止默认上传行为
+  return false;
+};
+
 const onSubmit1 = () => {
   console.log('submit!')
 }
