@@ -103,7 +103,8 @@
 
           <el-dialog v-model="dialogVisible1" title="上传列表">
             <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
-              multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed" :before-upload="beforeUpload">
+              multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed" :before-upload="beforeUpload"
+              :directory="true">
               <el-button type="primary">点击上传</el-button>
               <template #tip>
                 <div class="el-upload__tip">
@@ -112,6 +113,8 @@
               </template>
             </el-upload>
           </el-dialog>
+
+          <el-button @click="onAddFolder">上传文件夹</el-button>
 
           <el-dialog v-model="dialogVisible2" title="文件夹命名">
             <el-form>
@@ -273,7 +276,7 @@ const handlePreview: UploadProps['onPreview'] = (uploadFile) => {
 
 const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
   ElMessage.warning(
-    `The limit is 3, you selected ${files.length} files this time, add up to ${files.length + uploadFiles.length
+    `The limit is 10, you selected ${files.length} files this time, add up to ${files.length + uploadFiles.length
     } totally`
   )
 }
@@ -304,8 +307,40 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
     });
   // 阻止默认上传行为
   return false;
-};
-
+}
+// 上传文件夹
+const onAddFolder = () => {
+  const input = document.createElement("input")
+  input.type = "file"
+  input.setAttribute("allowdirs", "true")
+  input.setAttribute("directory", "true")
+  input.style.cssText = "display:none"
+  input.setAttribute("webkitdirectory", "true")
+  input.multiple = true
+  document.querySelector("body")!.appendChild(input)
+  // todo 这里增加了input标签，可以给它删掉
+  input.click()
+  input.onchange = async (e) => {
+    console.log(e)
+    console.log((e.target as HTMLInputElement).files)
+    const formData = new FormData()
+    const file = (e.target as HTMLInputElement).files
+    for (let i = 0; i < file!.length; i++) {
+      formData.append("files", file![i], file![i].webkitRelativePath)
+    }
+    console.log(formData)
+    try {
+      const response = await axios.post("http://localhost:8081/file/upload", formData);
+      const msg = response.data.msg;
+      // 处理消息
+      console.log(msg);
+    } catch (error) {
+      // 处理错误
+      console.error(error);
+    }
+    document.querySelector("body")!.removeChild(input)
+  }
+}
 const onSubmit1 = () => {
   console.log('submit!')
 }
