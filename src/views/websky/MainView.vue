@@ -338,7 +338,18 @@ const onAddFolder = () => {
   }
 }
 const onSubmit1 = () => {
-  console.log('submit!')
+  const formData = new FormData()
+  formData.append('folderName', input1.value);
+  // 使用 Axios 发起新建文件夹请求
+  axios.post('http://localhost:8081/file/addFolder', formData)
+    .then(response => {
+      // 处理新建成功的逻辑
+      console.log('AddFolder success:', response);
+    })
+    .catch(error => {
+      // 处理新建失败的逻辑
+      console.error('AddFolder error:', error);
+    })
 }
 const onSubmit2 = () => {
   console.log('submit!')
