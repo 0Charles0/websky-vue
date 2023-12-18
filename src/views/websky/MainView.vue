@@ -53,11 +53,23 @@
         </el-aside>
         <el-main>
           <el-row>
-            <el-button type="primary" round @click="dialogVisible1 = true">
-              <el-icon>
-                <Upload />
-              </el-icon>上传
-            </el-button>
+            <el-dropdown>
+              <el-button type="primary" round>
+                <el-icon>
+                  <Upload />
+                </el-icon>上传<el-icon><arrow-down /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
+                    multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed"
+                    :before-upload="beforeUpload" :directory="true">
+                    <el-button text style="width:100px">文件</el-button>
+                  </el-upload>
+                  <el-button text style="width:100px" @click="onAddFolder">文件夹</el-button>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
             <el-button type="success" round @click="dialogVisible2 = true">
               <el-icon>
                 <FolderAdd />
@@ -100,21 +112,6 @@
             <el-table-column prop="name" label="修改时间" sortable width="500" />
             <el-table-column prop="address" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
           </el-table>
-
-          <el-dialog v-model="dialogVisible1" title="上传列表">
-            <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
-              multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed" :before-upload="beforeUpload"
-              :directory="true">
-              <el-button type="primary">点击上传</el-button>
-              <template #tip>
-                <div class="el-upload__tip">
-                  一次最多上传10个文件。
-                </div>
-              </template>
-            </el-upload>
-          </el-dialog>
-
-          <el-button @click="onAddFolder">上传文件夹</el-button>
 
           <el-dialog v-model="dialogVisible2" title="文件夹命名">
             <el-form>
@@ -210,7 +207,6 @@ const isHovered = ref(false);
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<User[]>([])
 const search = ref('')
-const dialogVisible1 = ref(false)
 const dialogVisible2 = ref(false)
 const dialogVisible3 = ref(false)
 const dialogVisible4 = ref(false)
@@ -294,7 +290,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   // 创建一个 FormData 对象，用于将文件上传到服务器
   const formData = new FormData();
   // 将文件追加到 FormData 中，注意 'file' 参数需要和后端接口中接收文件的参数名一致
-  formData.append('file', file);
+  formData.append('files', file);
   // 使用 Axios 发起文件上传请求
   axios.post('http://localhost:8081/file/upload', formData)
     .then(response => {
