@@ -103,14 +103,14 @@
               </el-input>
             </div>
           </el-row>
-          <el-table ref="multipleTableRef" :data="tableData" :default-sort="{ prop: 'date', order: 'descending' }"
+          <el-table ref="multipleTableRef" :data="tableData" :default-sort="{ prop: 'fileName', order: 'descending' }"
             style="width: 100%" @selection-change="handleSelectionChange">
             <el-table-column type="selection" width="50" />
-            <el-table-column prop="date" label="文件名" sortable width="750">
-              <template #default="scope">{{ scope.row.date }}</template>
+            <el-table-column prop="fileName" label="文件名" sortable width="750">
+              <!-- <template #default="scope">{{ scope.row.fileName }}</template> -->
             </el-table-column>
-            <el-table-column prop="name" label="修改时间" sortable width="500" />
-            <el-table-column prop="address" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
+            <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
+            <el-table-column prop="size" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
           </el-table>
 
           <el-dialog v-model="dialogVisible2" title="文件夹命名">
@@ -191,21 +191,21 @@
 
 <script lang="ts" setup>
 import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search } from '@element-plus/icons-vue'
-import { ref, reactive, toRefs } from 'vue'
+import { ref, reactive, toRefs, onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
 import type { UploadProps, UploadUserFile } from 'element-plus'
 import axios from 'axios'
 
-interface User {
-  date: string
-  name: string
-  address: string
+interface File {
+  fileName: string
+  updateTime: string
+  size: string
 }
 
 const isHovered = ref(false);
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
-const multipleSelection = ref<User[]>([])
+const multipleSelection = ref<File[]>([])
 const search = ref('')
 const dialogVisible2 = ref(false)
 const dialogVisible3 = ref(false)
@@ -219,15 +219,28 @@ const input1 = ref('')
 const input2 = ref('')
 const router = useRouter();
 
+onMounted(() => {
+  const path = '/'
+  // 在组件挂载后获取数据
+  axios.get(`http://localhost:8081/file/fileList?path=${path}`)
+    .then(response => {
+      tableData.value = response.data.data
+      console.log('Query success:', response)
+    })
+    .catch(error => {
+      // 处理查询失败的逻辑
+      console.error('Query error:', error)
+    })
+})
 const refreshPage = () => {
   window.location.reload()
 }
-const handleSelectionChange = (val: User[]) => {
+const handleSelectionChange = (val: File[]) => {
   multipleSelection.value = val
 }
 
-const formatter = (row: User/* , column: TableColumnCtx<User> */) => {
-  return row.address
+const formatter = (row: File/* , column: TableColumnCtx<File> */) => {
+  return row.size
 }
 
 const state = reactive({
@@ -300,7 +313,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
     .catch(error => {
       // 处理上传失败的逻辑
       console.error('Upload error:', error);
-    });
+    })
   // 阻止默认上传行为
   return false;
 }
@@ -365,43 +378,57 @@ const logout = () => {
   localStorage.removeItem('token');
   router.push('/login');
 }
-const tableData: User[] = [
+/* const queryFiles = async () => {
+  const path = '/'
+  // 在组件挂载后获取数据
+  axios.get(`http://localhost:8081/file/fileList?path=${path}`)
+    .then(response => {
+      tableData.value = response.data.data
+      console.log('Query success:', response)
+    })
+    .catch(error => {
+      // 处理查询失败的逻辑
+      console.error('Query error:', error)
+    })
+} */
+const tableData = ref([])
+/* const tableData: File[] = [
   {
-    date: "Tom1",
-    name: "2016-05-03",
-    address: "107M",
+    fileName: "Tom1",
+    updateTime: "2016-05-03",
+    size: "107M",
   },
   {
-    date: "Tom2",
-    name: "2016-05-02",
-    address: "106M",
+    fileName: "Tom2",
+    updateTime: "2016-05-02",
+    size: "106M",
   },
   {
-    date: "Tom3",
-    name: "2016-05-04",
-    address: "105M",
+    fileName: "Tom3",
+    updateTime: "2016-05-04",
+    size: "105M",
   },
   {
-    date: "Tom4",
-    name: "2016-05-01",
-    address: "104M",
+    fileName: "Tom4",
+    updateTime: "2016-05-01",
+    size: "104M",
   },
   {
-    date: "Tom5",
-    name: "2016-05-08",
-    address: "103M",
+    fileName: "Tom5",
+    updateTime: "2016-05-08",
+    size: "103M",
   },
   {
-    date: "Tom6",
-    name: "2016-05-06",
-    address: "102M",
+    fileName: "Tom6",
+    updateTime: "2016-05-06",
+    size: "102M",
   },
   {
-    date: "Tom7",
-    name: "2016-05-07",
-    address: "101M",
+    fileName: "Tom7",
+    updateTime: "2016-05-07",
+    size: "101M",
   }
-]
+] */
 const gridData = [
   {
     date: '2016-05-02',
