@@ -107,7 +107,10 @@
             style="width: 100%" @selection-change="handleSelectionChange">
             <el-table-column type="selection" width="50" />
             <el-table-column prop="fileName" label="文件名" sortable width="750">
-              <!-- <template #default="scope">{{ scope.row.fileName }}</template> -->
+              <template #default="scope">
+                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank">{{ scope.row.fileName }}</el-link>
+                <el-button v-else text @click="queryFiles(scope.row.fileName)">{{ scope.row.fileName }}</el-button>
+              </template>
             </el-table-column>
             <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
             <el-table-column prop="size" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
@@ -199,6 +202,7 @@ import axios from 'axios'
 
 interface File {
   fileName: string
+  url: string
   updateTime: string
   size: string
 }
@@ -232,6 +236,9 @@ onMounted(() => {
       console.error('Query error:', error)
     })
 })
+/* const openLink = (url: string) => {
+  window.open(url, '_blank');
+} */
 const refreshPage = () => {
   window.location.reload()
 }
@@ -378,8 +385,7 @@ const logout = () => {
   localStorage.removeItem('token');
   router.push('/login');
 }
-/* const queryFiles = async () => {
-  const path = '/'
+const queryFiles = async (path: string) => {
   // 在组件挂载后获取数据
   axios.get(`http://localhost:8081/file/fileList?path=${path}`)
     .then(response => {
@@ -390,45 +396,8 @@ const logout = () => {
       // 处理查询失败的逻辑
       console.error('Query error:', error)
     })
-} */
+}
 const tableData = ref([])
-/* const tableData: File[] = [
-  {
-    fileName: "Tom1",
-    updateTime: "2016-05-03",
-    size: "107M",
-  },
-  {
-    fileName: "Tom2",
-    updateTime: "2016-05-02",
-    size: "106M",
-  },
-  {
-    fileName: "Tom3",
-    updateTime: "2016-05-04",
-    size: "105M",
-  },
-  {
-    fileName: "Tom4",
-    updateTime: "2016-05-01",
-    size: "104M",
-  },
-  {
-    fileName: "Tom5",
-    updateTime: "2016-05-08",
-    size: "103M",
-  },
-  {
-    fileName: "Tom6",
-    updateTime: "2016-05-06",
-    size: "102M",
-  },
-  {
-    fileName: "Tom7",
-    updateTime: "2016-05-07",
-    size: "101M",
-  }
-] */
 const gridData = [
   {
     date: '2016-05-02',
