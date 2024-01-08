@@ -108,7 +108,8 @@
             <el-table-column type="selection" width="50" />
             <el-table-column prop="fileName" label="文件名" sortable width="750">
               <template #default="scope">
-                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank">{{ scope.row.fileName }}</el-link>
+                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank">{{
+                  scope.row.fileName }}</el-link>
                 <el-button v-else text @click="queryFiles(scope.row.fileName)">{{ scope.row.fileName }}</el-button>
               </template>
             </el-table-column>
@@ -221,20 +222,12 @@ const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
 const input1 = ref('')
 const input2 = ref('')
+const superiorPath = ref('')
+const tableData = ref([])
 const router = useRouter();
 
 onMounted(() => {
-  const path = '/'
-  // 在组件挂载后获取数据
-  axios.get(`http://localhost:8081/file/fileList?path=${path}`)
-    .then(response => {
-      tableData.value = response.data.data
-      console.log('Query success:', response)
-    })
-    .catch(error => {
-      // 处理查询失败的逻辑
-      console.error('Query error:', error)
-    })
+  queryFiles("/")
 })
 /* const openLink = (url: string) => {
   window.open(url, '_blank');
@@ -389,7 +382,8 @@ const queryFiles = async (path: string) => {
   // 在组件挂载后获取数据
   axios.get(`http://localhost:8081/file/fileList?path=${path}`)
     .then(response => {
-      tableData.value = response.data.data
+      superiorPath.value = response.data.data[0]
+      tableData.value = response.data.data.slice(1)
       console.log('Query success:', response)
     })
     .catch(error => {
@@ -397,7 +391,6 @@ const queryFiles = async (path: string) => {
       console.error('Query error:', error)
     })
 }
-const tableData = ref([])
 const gridData = [
   {
     date: '2016-05-02',
