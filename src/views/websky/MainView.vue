@@ -103,14 +103,23 @@
               </el-input>
             </div>
           </el-row>
+          <div class="input_box" style="margin-left:20px">
+            <el-input v-model="currentPath" :clearable="true" placeholder="路径" @keydown.enter="queryFiles(currentPath)"
+              @blur="queryFiles(currentPath)" class="input-with-select">
+              <template #prepend><el-button :icon="Back" round @click="queryFiles(superiorPath)" /></template>
+              <template #prefix>/&nbsp;</template>
+            </el-input>
+          </div>
           <el-table ref="multipleTableRef" :data="tableData" :default-sort="{ prop: 'fileName', order: 'descending' }"
             style="width: 100%" @selection-change="handleSelectionChange">
             <el-table-column type="selection" width="50" />
             <el-table-column prop="fileName" label="文件名" sortable width="750">
               <template #default="scope">
-                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank">{{
-                  scope.row.fileName }}</el-link>
-                <el-button v-else text @click="queryFiles(scope.row.fileName)">{{ scope.row.fileName }}</el-button>
+                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank"
+                  :icon="Document">{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1) }}</el-link>
+                <el-button v-else text @click="queryFiles(scope.row.fileName)" :icon="Folder">{{
+                  scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
+                }}</el-button>
               </template>
             </el-table-column>
             <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
@@ -194,7 +203,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search } from '@element-plus/icons-vue'
+import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search, Back, Folder } from '@element-plus/icons-vue'
 import { ref, reactive, toRefs, onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -222,13 +231,15 @@ const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
 const input1 = ref('')
 const input2 = ref('')
+const currentPath = ref('')
 const superiorPath = ref('')
 const tableData = ref([])
-const router = useRouter();
+const router = useRouter()
 
 onMounted(() => {
-  queryFiles("/")
+  queryFiles(currentPath.value)
 })
+
 /* const openLink = (url: string) => {
   window.open(url, '_blank');
 } */
@@ -352,16 +363,17 @@ const onAddFolder = () => {
 }
 const onSubmit1 = () => {
   const formData = new FormData()
-  formData.append('folderName', input1.value);
+  formData.append('folderName', input1.value)
+  formData.append('path', currentPath.value)
   // 使用 Axios 发起新建文件夹请求
   axios.post('http://localhost:8081/file/addFolder', formData)
     .then(response => {
       // 处理新建成功的逻辑
-      console.log('AddFolder success:', response);
+      console.log('AddFolder success:', response)
     })
     .catch(error => {
       // 处理新建失败的逻辑
-      console.error('AddFolder error:', error);
+      console.error('AddFolder error:', error)
     })
 }
 const onSubmit2 = () => {
@@ -379,10 +391,19 @@ const logout = () => {
   router.push('/login');
 }
 const queryFiles = async (path: string) => {
+  if (path === '') {
+    path = '/'
+  }
   // 在组件挂载后获取数据
   axios.get(`http://localhost:8081/file/fileList?path=${path}`)
     .then(response => {
-      superiorPath.value = response.data.data[0]
+      if (path !== '/') {
+        currentPath.value = path
+      }
+      else {
+        currentPath.value = ''
+      }
+      superiorPath.value = response.data.data[0].fileName
       tableData.value = response.data.data.slice(1)
       console.log('Query success:', response)
     })
