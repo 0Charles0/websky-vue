@@ -80,7 +80,7 @@
                 <Rank />
               </el-icon>批量移动
             </el-button>
-            <el-button type="danger" round @click="dialogVisible4 = true">
+            <el-button type="danger" round @click="batchDeletion">
               <el-icon>
                 <Delete />
               </el-icon>批量删除
@@ -104,7 +104,7 @@
             </div>
           </el-row>
           <div class="input_box" style="margin-left:20px">
-            <el-input v-model="currentPath" :clearable="true" placeholder="路径" @keydown.enter="queryFiles(currentPath)"
+            <el-input v-model="currentPath" :clearable="true" placeholder="" @keydown.enter="queryFiles(currentPath)"
               @blur="queryFiles(currentPath)" class="input-with-select">
               <template #prepend><el-button :icon="Back" round @click="queryFiles(superiorPath)" /></template>
               <template #prefix>/&nbsp;</template>
@@ -117,7 +117,7 @@
               <template #default="scope">
                 <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank"
                   :icon="Document">{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1) }}</el-link>
-                <el-button v-else text @click="queryFiles(scope.row.fileName)" :icon="Folder">{{
+                <el-button v-else text @click="queryFiles(scope.row.fileName)" :icon="Folder" style="padding-left:0px">{{
                   scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
                 }}</el-button>
               </template>
@@ -144,14 +144,6 @@
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="onSubmit2">移动</el-button>
-              </el-form-item>
-            </el-form>
-          </el-dialog>
-
-          <el-dialog v-model="dialogVisible4" title="确认删除">
-            <el-form>
-              <el-form-item>
-                <el-button type="primary" @click="onSubmit3">确认</el-button>
               </el-form-item>
             </el-form>
           </el-dialog>
@@ -223,7 +215,6 @@ const multipleSelection = ref<File[]>([])
 const search = ref('')
 const dialogVisible2 = ref(false)
 const dialogVisible3 = ref(false)
-const dialogVisible4 = ref(false)
 const dialogVisible5 = ref(false)
 const dialogVisible6 = ref(false)
 const dialogVisible7 = ref(false)
@@ -235,6 +226,7 @@ const currentPath = ref('')
 const superiorPath = ref('')
 const tableData = ref([])
 const router = useRouter()
+const selectedFileName = ref<string[]>([])
 
 onMounted(() => {
   queryFiles(currentPath.value)
@@ -248,10 +240,26 @@ const refreshPage = () => {
 }
 const handleSelectionChange = (val: File[]) => {
   multipleSelection.value = val
+  selectedFileName.value = multipleSelection.value.map(file => file.fileName)
 }
 
 const formatter = (row: File/* , column: TableColumnCtx<File> */) => {
-  return row.size
+  const size = parseInt(row.size, 10);
+  if (size < 1000) {
+    return `${size} B`
+  }
+  else if (1000 <= size && size < 1000 * 1024) {
+    return `${size / 1000} KB`
+  }
+  else if (1000 * 1024 <= size && size < 1000 * (1024 ** 2)) {
+    return `${size / (1000 * 1024)} MB`
+  }
+  else if (1000 * (1024 ** 2) <= size && size < 1000 * (1024 ** 3)) {
+    return `${size / (1000 * (1024 ** 2))} GB`
+  }
+  else if (size >= 1000 * (1024 ** 3)) {
+    return `${size / (1000 * (1024 ** 3))} TB`
+  }
 }
 
 const state = reactive({
@@ -314,12 +322,14 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   // 创建一个 FormData 对象，用于将文件上传到服务器
   const formData = new FormData();
   // 将文件追加到 FormData 中，注意 'file' 参数需要和后端接口中接收文件的参数名一致
-  formData.append('files', file);
+  formData.append('files', file, currentPath.value + file.name);
   // 使用 Axios 发起文件上传请求
   axios.post('http://localhost:8081/file/upload', formData)
     .then(response => {
       // 处理上传成功的逻辑
       console.log('Upload success:', response);
+      // 上传完刷新显示
+      queryFiles(currentPath.value)
     })
     .catch(error => {
       // 处理上传失败的逻辑
@@ -346,7 +356,7 @@ const onAddFolder = () => {
     const formData = new FormData()
     const file = (e.target as HTMLInputElement).files
     for (let i = 0; i < file!.length; i++) {
-      formData.append("files", file![i], file![i].webkitRelativePath)
+      formData.append("files", file![i], currentPath.value + file![i].webkitRelativePath)
     }
     console.log(formData)
     try {
@@ -354,6 +364,8 @@ const onAddFolder = () => {
       const msg = response.data.msg;
       // 处理消息
       console.log(msg);
+      // 上传完刷新显示
+      queryFiles(currentPath.value)
     } catch (error) {
       // 处理错误
       console.error(error);
@@ -362,6 +374,7 @@ const onAddFolder = () => {
   }
 }
 const onSubmit1 = () => {
+  dialogVisible2.value = false
   const formData = new FormData()
   formData.append('folderName', input1.value)
   formData.append('path', currentPath.value)
@@ -370,6 +383,8 @@ const onSubmit1 = () => {
     .then(response => {
       // 处理新建成功的逻辑
       console.log('AddFolder success:', response)
+      // 上传完刷新显示
+      queryFiles(currentPath.value)
     })
     .catch(error => {
       // 处理新建失败的逻辑
@@ -377,9 +392,6 @@ const onSubmit1 = () => {
     })
 }
 const onSubmit2 = () => {
-  console.log('submit!')
-}
-const onSubmit3 = () => {
   console.log('submit!')
 }
 const onSubmit4 = () => {
@@ -410,6 +422,22 @@ const queryFiles = async (path: string) => {
     .catch(error => {
       // 处理查询失败的逻辑
       console.error('Query error:', error)
+    })
+}
+const batchDeletion = () => {
+  // 使用 Axios 发起批量删除请求
+  axios.delete('http://localhost:8081/file/delete', {
+    data: selectedFileName.value
+  })
+    .then(response => {
+      // 处理删除成功的逻辑
+      console.log('BatchDeletion success:', response)
+      // 上传完刷新显示
+      queryFiles(currentPath.value)
+    })
+    .catch(error => {
+      // 处理删除失败的逻辑
+      console.error('BatchDeletion error:', error)
     })
 }
 const gridData = [
