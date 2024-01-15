@@ -75,11 +75,6 @@
                 <FolderAdd />
               </el-icon>新建文件夹
             </el-button>
-            <el-button type="warning" round @click="dialogVisible3 = true">
-              <el-icon>
-                <Rank />
-              </el-icon>批量移动
-            </el-button>
             <el-button type="danger" round @click="batchDeletion">
               <el-icon>
                 <Delete />
@@ -116,7 +111,7 @@
             <el-table-column prop="fileName" label="文件名" sortable width="750">
               <template #default="scope">
                 <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank"
-                  :icon="Document">{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1) }}</el-link>
+                  :icon="Document">&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1) }}</el-link>
                 <el-button v-else text @click="queryFiles(scope.row.fileName)" :icon="Folder" style="padding-left:0px">{{
                   scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
                 }}</el-button>
@@ -137,16 +132,6 @@
             </el-form>
           </el-dialog>
 
-          <el-dialog v-model="dialogVisible3" title="目标路径">
-            <el-form>
-              <el-form-item>
-                <el-input v-model="input2" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="onSubmit2">移动</el-button>
-              </el-form-item>
-            </el-form>
-          </el-dialog>
 
           <el-dialog v-model="dialogVisible5" title="下载路径">
             <el-form>
@@ -195,7 +180,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Rank, Delete, Download, Search, Back, Folder } from '@element-plus/icons-vue'
+import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder } from '@element-plus/icons-vue'
 import { ref, reactive, toRefs, onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -214,14 +199,12 @@ const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<File[]>([])
 const search = ref('')
 const dialogVisible2 = ref(false)
-const dialogVisible3 = ref(false)
 const dialogVisible5 = ref(false)
 const dialogVisible6 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
 const input1 = ref('')
-const input2 = ref('')
 const currentPath = ref('')
 const superiorPath = ref('')
 const tableData = ref([])
@@ -249,16 +232,16 @@ const formatter = (row: File/* , column: TableColumnCtx<File> */) => {
     return `${size} B`
   }
   else if (1000 <= size && size < 1000 * 1024) {
-    return `${size / 1000} KB`
+    return `${(size / 1000).toFixed(2)} KB`
   }
   else if (1000 * 1024 <= size && size < 1000 * (1024 ** 2)) {
-    return `${size / (1000 * 1024)} MB`
+    return `${(size / (1000 * 1024)).toFixed(2)} MB`
   }
   else if (1000 * (1024 ** 2) <= size && size < 1000 * (1024 ** 3)) {
-    return `${size / (1000 * (1024 ** 2))} GB`
+    return `${(size / (1000 * (1024 ** 2))).toFixed(2)} GB`
   }
   else if (size >= 1000 * (1024 ** 3)) {
-    return `${size / (1000 * (1024 ** 3))} TB`
+    return `${(size / (1000 * (1024 ** 3))).toFixed(2)} TB`
   }
 }
 
@@ -390,9 +373,6 @@ const onSubmit1 = () => {
       // 处理新建失败的逻辑
       console.error('AddFolder error:', error)
     })
-}
-const onSubmit2 = () => {
-  console.log('submit!')
 }
 const onSubmit4 = () => {
   console.log('submit!')
