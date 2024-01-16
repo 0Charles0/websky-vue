@@ -30,22 +30,22 @@
                   <Files />
                 </el-icon>我的文件
               </template>
-              <el-menu-item index="1-1"><el-icon>
+              <el-menu-item index="1-1" @click="queryFiles('/')"><el-icon>
                   <Menu />
                 </el-icon>全部</el-menu-item>
-              <el-menu-item index="1-2"><el-icon>
+              <el-menu-item index="1-2" @click="queryCategory('图片')"><el-icon>
                   <Picture />
                 </el-icon>图片</el-menu-item>
-              <el-menu-item index="1-3"><el-icon>
+              <el-menu-item index="1-3" @click="queryCategory('文档')"><el-icon>
                   <Document />
                 </el-icon>文档</el-menu-item>
-              <el-menu-item index="1-4"><el-icon>
+              <el-menu-item index="1-4" @click="queryCategory('视频')"><el-icon>
                   <VideoPlay />
                 </el-icon>视频</el-menu-item>
-              <el-menu-item index="1-5"><el-icon>
+              <el-menu-item index="1-5" @click="queryCategory('音频')"><el-icon>
                   <Headset />
                 </el-icon>音频</el-menu-item>
-              <el-menu-item index="1-6"><el-icon>
+              <el-menu-item index="1-6" @click="queryCategory('其它')"><el-icon>
                   <More />
                 </el-icon>其它</el-menu-item>
             </el-sub-menu>
@@ -80,7 +80,7 @@
                 <Delete />
               </el-icon>批量删除
             </el-button>
-            <el-button type="primary" round @click="dialogVisible5 = true">
+            <el-button type="primary" round @click="batchDownload">
               <el-icon>
                 <Download />
               </el-icon>批量下载
@@ -110,11 +110,26 @@
             <el-table-column type="selection" width="50" />
             <el-table-column prop="fileName" label="文件名" sortable width="750">
               <template #default="scope">
-                <el-link v-if="scope.row.fileName.slice(-1) !== '/'" :href="scope.row.url" target="_blank"
-                  :icon="Document">&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1) }}</el-link>
-                <el-button v-else text @click="queryFiles(scope.row.fileName)" :icon="Folder" style="padding-left:0px">{{
-                  scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
-                }}</el-button>
+                <el-button v-if="scope.row.fileName.slice(-1) === '/'" text @click="queryFiles(scope.row.fileName)"
+                  :icon="Folder" style="padding-left:0px">{{
+                    scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
+                  }}</el-button>
+                <el-link v-else-if="scope.row.category === '图片'" :href="scope.row.url" target="_blank"
+                  :icon="Picture">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                  }}</el-link>
+                <el-link v-else-if="scope.row.category === '文档'" :href="scope.row.url" target="_blank"
+                  :icon="Document">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                  }}</el-link>
+                <el-link v-else-if="scope.row.category === '视频'" :href="scope.row.url" target="_blank"
+                  :icon="VideoPlay">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                  }}</el-link>
+                <el-link v-else-if="scope.row.category === '音频'" :href="scope.row.url" target="_blank"
+                  :icon="Headset">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                  }}</el-link>
+                <el-link v-else-if="scope.row.category === '其它'" :href="scope.row.url" target="_blank"
+                  :icon="Tickets">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                  }}</el-link>
+
               </template>
             </el-table-column>
             <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
@@ -128,15 +143,6 @@
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="onSubmit1">创建</el-button>
-              </el-form-item>
-            </el-form>
-          </el-dialog>
-
-
-          <el-dialog v-model="dialogVisible5" title="下载路径">
-            <el-form>
-              <el-form-item>
-                <el-button type="primary" @click="onSubmit4">下载</el-button>
               </el-form-item>
             </el-form>
           </el-dialog>
@@ -180,7 +186,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder } from '@element-plus/icons-vue'
+import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets } from '@element-plus/icons-vue'
 import { ref, reactive, toRefs, onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -192,6 +198,7 @@ interface File {
   url: string
   updateTime: string
   size: string
+  category: string
 }
 
 const isHovered = ref(false);
@@ -199,7 +206,6 @@ const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<File[]>([])
 const search = ref('')
 const dialogVisible2 = ref(false)
-const dialogVisible5 = ref(false)
 const dialogVisible6 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
@@ -264,16 +270,7 @@ const handleCommand = (command: string) => {
     // 执行退出操作
   }
 };
-const fileList = ref<UploadUserFile[]>([
-  /* {
-    name: 'element-plus-logo.svg',
-    url: 'https://element-plus.org/images/element-plus-logo.svg',
-  },
-  {
-    name: 'element-plus-logo2.svg',
-    url: 'https://element-plus.org/images/element-plus-logo.svg',
-  }, */
-])
+const fileList = ref<UploadUserFile[]>([])
 
 /* const handleRemove: UploadProps['onRemove'] = (file, uploadFiles) => {
   if (file && file.status === 'success') {
@@ -374,9 +371,6 @@ const onSubmit1 = () => {
       console.error('AddFolder error:', error)
     })
 }
-const onSubmit4 = () => {
-  console.log('submit!')
-}
 const logout = () => {
   // 清除 token 并跳转到登录页面
   localStorage.removeItem('token');
@@ -404,6 +398,18 @@ const queryFiles = async (path: string) => {
       console.error('Query error:', error)
     })
 }
+const queryCategory = async (category: string) => {
+  // 在组件挂载后获取数据
+  axios.get(`http://localhost:8081/file/category?category=${category}`)
+    .then(response => {
+      tableData.value = response.data.data
+      console.log('Query success:', response)
+    })
+    .catch(error => {
+      // 处理查询失败的逻辑
+      console.error('Query error:', error)
+    })
+}
 const batchDeletion = () => {
   // 使用 Axios 发起批量删除请求
   axios.delete('http://localhost:8081/file/delete', {
@@ -418,6 +424,34 @@ const batchDeletion = () => {
     .catch(error => {
       // 处理删除失败的逻辑
       console.error('BatchDeletion error:', error)
+    })
+}
+const batchDownload = () => {
+  // 使用 Axios 发起批量下载请求
+  axios({
+    method: 'get',
+    url: `http://localhost:8081/file/download?fileNames=${selectedFileName.value}`,
+    responseType: 'blob'  // 指定响应类型为 blob
+  })
+    .then(response => {
+      // 创建一个 Blob 对象
+      const blob = new Blob([response.data], { type: 'application/zip' });
+      // 创建一个下载链接
+      const downloadLink = document.createElement('a');
+      const url = window.URL.createObjectURL(blob);
+      // 设置下载链接的属性
+      downloadLink.href = url;
+      // 模拟点击下载链接
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      // 释放 URL 对象
+      window.URL.revokeObjectURL(url);
+      // 移除下载链接
+      document.body.removeChild(downloadLink);
+    })
+    .catch(error => {
+      // 处理下载失败的逻辑
+      console.error('BatchDownload error:', error);
     })
 }
 const gridData = [
