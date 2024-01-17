@@ -86,10 +86,10 @@
               </el-icon>批量下载
             </el-button>
             <div class="input_box" style="margin-left:20px;width:250px">
-              <el-input v-model="search" size="small" placeholder="Files to search" class="input-with-select"
+              <el-input v-model="userSearchInput" size="small" placeholder="Files to search" class="input-with-select"
                 style="border:none;box-shadow:none">
                 <template #prepend>
-                  <el-button @click="dialogVisible6 = true">
+                  <el-button @click="userSearch(userSearchInput)">
                     <el-icon>
                       <Search />
                     </el-icon>
@@ -147,17 +147,6 @@
             </el-form>
           </el-dialog>
 
-          <el-dialog v-model="dialogVisible6" title="搜索结果">
-            <el-form>
-              <el-form-item>
-                <el-table :data="gridData">
-                  <el-table-column property="date" label="Date" width="150" />
-                  <el-table-column property="name" label="Name" width="200" />
-                  <el-table-column property="address" label="Address" />
-                </el-table>
-              </el-form-item>
-            </el-form>
-          </el-dialog>
           <el-dialog v-model="dialogVisible7" title="更换头像">
             <el-form>
               <el-form-item>
@@ -204,9 +193,8 @@ interface File {
 const isHovered = ref(false);
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<File[]>([])
-const search = ref('')
+const userSearchInput = ref('')
 const dialogVisible2 = ref(false)
-const dialogVisible6 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
@@ -410,6 +398,18 @@ const queryCategory = async (category: string) => {
       console.error('Query error:', error)
     })
 }
+const userSearch = async (userSearchName: string) => {
+  // 在组件挂载后获取数据
+  axios.get(`http://localhost:8081/file/userSearch?userSearchName=${userSearchName}`)
+    .then(response => {
+      tableData.value = response.data.data.slice(1)
+      console.log('UserSearch success:', response)
+    })
+    .catch(error => {
+      // 处理搜索失败的逻辑
+      console.error('UserSearch error:', error)
+    })
+}
 const batchDeletion = () => {
   // 使用 Axios 发起批量删除请求
   axios.delete('http://localhost:8081/file/delete', {
@@ -454,28 +454,6 @@ const batchDownload = () => {
       console.error('BatchDownload error:', error);
     })
 }
-const gridData = [
-  {
-    date: '2016-05-02',
-    name: 'John Smith',
-    address: 'No.1518,  Jinshajiang Road, Putuo District',
-  },
-  {
-    date: '2016-05-04',
-    name: 'John Smith',
-    address: 'No.1518,  Jinshajiang Road, Putuo District',
-  },
-  {
-    date: '2016-05-01',
-    name: 'John Smith',
-    address: 'No.1518,  Jinshajiang Road, Putuo District',
-  },
-  {
-    date: '2016-05-03',
-    name: 'John Smith',
-    address: 'No.1518,  Jinshajiang Road, Putuo District',
-  },
-]
 </script>
 
 <style>
