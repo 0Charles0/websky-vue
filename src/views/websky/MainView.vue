@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header style="padding-left: 30px;">
+      <el-header style="padding-left:30px">
         <el-button style="border:none;width:106px;height:50px;float:left"
           :style="{ filter: isHovered ? 'brightness(1.1)' : '' }" @mouseover="isHovered = true"
           @mouseout="isHovered = false" @click="refreshPage">
@@ -9,9 +9,8 @@
         </el-button>
         <el-dropdown @command="handleCommand" trigger="hover" style="float:right;margin-top:1%">
           <el-button @click="dialogVisible7 = true" size="small" circle>
-            <el-avatar :size="size" :src="circleUrl" />
+            <el-avatar :size="size" :src="userInfo.image + '?' + Date.now()" />
           </el-button>
-
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="profile" @click="dialogVisible8 = true">个人信息</el-dropdown-item>
@@ -53,51 +52,62 @@
         </el-aside>
         <el-main>
           <el-row>
-            <el-dropdown>
-              <el-button type="primary" round>
-                <el-icon>
-                  <Upload />
-                </el-icon>上传<el-icon><arrow-down /></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
-                    multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed"
-                    :before-upload="beforeUpload" :directory="true">
-                    <el-button text style="width:100px">文件</el-button>
-                  </el-upload>
-                  <el-button text style="width:100px" @click="onAddFolder">文件夹</el-button>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-            <el-button type="success" round @click="dialogVisible2 = true">
-              <el-icon>
-                <FolderAdd />
-              </el-icon>新建文件夹
-            </el-button>
-            <el-button type="danger" round @click="batchDeletion">
-              <el-icon>
-                <Delete />
-              </el-icon>批量删除
-            </el-button>
-            <el-button type="primary" round @click="batchDownload">
-              <el-icon>
-                <Download />
-              </el-icon>批量下载
-            </el-button>
-            <div class="input_box" style="margin-left:20px;width:250px">
-              <el-input v-model="userSearchInput" size="small" placeholder="Files to search" class="input-with-select"
-                style="border:none;box-shadow:none">
-                <template #prepend>
-                  <el-button @click="userSearch(userSearchInput)">
-                    <el-icon>
-                      <Search />
-                    </el-icon>
-                  </el-button>
+            <el-col :span="2">
+              <el-dropdown>
+                <el-button type="primary" round>
+                  <el-icon>
+                    <Upload />
+                  </el-icon>上传<el-icon><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-upload v-model:file-list="fileList" class="upload-demo" action="http://localhost:8081/file/upload"
+                      multiple :on-preview="handlePreview" :limit="10" :on-exceed="handleExceed"
+                      :before-upload="beforeUpload" :directory="true">
+                      <el-button text style="width:100px">文件</el-button>
+                    </el-upload>
+                    <el-button text style="width:100px" @click="onAddFolder">文件夹</el-button>
+                  </el-dropdown-menu>
                 </template>
-              </el-input>
-            </div>
+              </el-dropdown>
+            </el-col>
+            <el-col :span="2">
+              <el-button type="success" round @click="dialogVisible2 = true">
+                <el-icon>
+                  <FolderAdd />
+                </el-icon>新建文件夹
+              </el-button>
+            </el-col>
+            <el-col :span="2">
+              <el-button type="danger" round @click="batchDeletion">
+                <el-icon>
+                  <Delete />
+                </el-icon>批量删除
+              </el-button>
+            </el-col>
+            <el-col :span="2">
+              <el-button type="primary" round @click="batchDownload">
+                <el-icon>
+                  <Download />
+                </el-icon>批量下载
+              </el-button>
+            </el-col>
+            <el-col :span="2" @keydown.enter.stop>
+              <div class="input_box" style="margin-left:20px;width:250px">
+                <el-input v-model="userSearchInput" size="small" placeholder="Files to search" class="input-with-select"
+                  style="border:none;box-shadow:none" @keydown.enter="userSearch(userSearchInput)">
+                  <template #prepend>
+                    <el-button @click="userSearch(userSearchInput)">
+                      <el-icon>
+                        <Search />
+                      </el-icon>
+                    </el-button>
+                  </template>
+                </el-input>
+              </div>
+            </el-col>
           </el-row>
+          <br>
           <div class="input_box" style="margin-left:20px">
             <el-input v-model="currentPath" :clearable="true" placeholder="" @keydown.enter="queryFiles(currentPath)"
               @blur="queryFiles(currentPath)" class="input-with-select">
@@ -146,25 +156,33 @@
               </el-form-item>
             </el-form>
           </el-dialog>
-
-          <el-dialog v-model="dialogVisible7" title="更换头像">
-            <el-form>
-              <el-form-item>
-
-              </el-form-item>
-            </el-form>
+          <el-dialog v-model="dialogVisible7" title="更换头像" headers.stop>
+            <el-upload class="avatar-uploader" action="http://localhost:8081/file/uploadImage" :headers="{ token: jwt }"
+              name="files" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+              <el-icon v-else class="avatar-uploader-icon">
+                <Plus />
+              </el-icon>
+            </el-upload>
+            <el-button>确认</el-button>
           </el-dialog>
           <el-dialog v-model="dialogVisible8" title="个人信息">
-            <el-form>
-              <el-form-item>
-
+            <el-form :model="userInfo">
+              <el-form-item label="用户名">
+                <el-input v-model="userInfo.userName" disabled />
+              </el-form-item>
+              <el-form-item label="邮箱">
+                <el-input v-model="userInfo.email" disabled />
+              </el-form-item>
+              <el-form-item label="修改密码">
+                <el-input v-model="newPassword" placeholder="新密码" />
+                <el-button @click="updatePassword(newPassword)">确认修改</el-button>
               </el-form-item>
             </el-form>
           </el-dialog>
           <el-dialog v-model="dialogVisible9" title="分享管理">
             <el-form>
               <el-form-item>
-
               </el-form-item>
             </el-form>
           </el-dialog>
@@ -176,7 +194,7 @@
 
 <script lang="ts" setup>
 import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets } from '@element-plus/icons-vue'
-import { ref, reactive, toRefs, onMounted } from 'vue'
+import { ref, /* reactive, toRefs, */ onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
 import type { UploadProps, UploadUserFile } from 'element-plus'
@@ -188,6 +206,11 @@ interface File {
   updateTime: string
   size: string
   category: string
+}
+interface User {
+  userName: string
+  email: string
+  image: string
 }
 
 const isHovered = ref(false);
@@ -204,9 +227,18 @@ const superiorPath = ref('')
 const tableData = ref([])
 const router = useRouter()
 const selectedFileName = ref<string[]>([])
+const newPassword = ref('')
+const imageUrl = ref('')
+const jwt = ref(localStorage.getItem('token'))
+const userInfo = ref<User>({
+  userName: '',
+  email: '',
+  image: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+})
 
 onMounted(() => {
   queryFiles(currentPath.value)
+  queryUser()
 })
 
 /* const openLink = (url: string) => {
@@ -239,12 +271,13 @@ const formatter = (row: File/* , column: TableColumnCtx<File> */) => {
   }
 }
 
-const state = reactive({
+/* const state = reactive({
   circleUrl:
-    'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+    // 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+    userInfo.value.image
 })
 
-const { circleUrl } = toRefs(state)
+const { circleUrl } = toRefs(state) */
 
 const size = ''; // 头像大小，根据你的需求调整
 
@@ -387,15 +420,34 @@ const queryFiles = async (path: string) => {
     })
 }
 const queryCategory = async (category: string) => {
-  // 在组件挂载后获取数据
   axios.get(`http://localhost:8081/file/category?category=${category}`)
     .then(response => {
       tableData.value = response.data.data
       console.log('Query success:', response)
     })
     .catch(error => {
-      // 处理查询失败的逻辑
       console.error('Query error:', error)
+    })
+}
+const queryUser = async () => {
+  axios.get(`http://localhost:8081/user/userInfo`)
+    .then(response => {
+      userInfo.value = response.data.data
+      console.log('Query success:', response)
+    })
+    .catch(error => {
+      console.error('Query error:', error)
+    })
+}
+const updatePassword = async (newPassword: string) => {
+  const data = new FormData()
+  data.append('password', newPassword)
+  axios.patch('http://localhost:8081/user/updatePassword', data)
+    .then(response => {
+      console.log('Update success:', response)
+    })
+    .catch(error => {
+      console.error('Update error:', error)
     })
 }
 const userSearch = async (userSearchName: string) => {
@@ -454,7 +506,32 @@ const batchDownload = () => {
       console.error('BatchDownload error:', error);
     })
 }
+const handleAvatarSuccess: UploadProps['onSuccess'] = (
+  response,
+  uploadFile
+) => {
+  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+  queryUser()
+}
+const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+  if (rawFile.type !== 'image/jpeg') {
+    ElMessage.error('Avatar picture must be JPG format!')
+    return false
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('Avatar picture size can not exceed 2MB!')
+    return false
+  }
+  return true
+}
 </script>
+
+<style scoped>
+.avatar-uploader .avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+</style>
 
 <style>
 .input-with-select .el-input-group__prepend {
@@ -470,5 +547,26 @@ const batchDownload = () => {
 .input_box {
   border-radius: 100px;
   border: 1px solid#ccc;
+}
+
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
 }
 </style>
