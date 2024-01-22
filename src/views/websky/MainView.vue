@@ -78,18 +78,25 @@
                 </el-icon>新建文件夹
               </el-button>
             </el-col>
-            <el-col :span="2">
+            <el-col :span="3">
               <el-button type="danger" round @click="batchDeletion">
                 <el-icon>
                   <Delete />
-                </el-icon>批量删除
+                </el-icon>删除选中文件
               </el-button>
             </el-col>
             <el-col :span="2">
               <el-button type="primary" round @click="batchDownload">
                 <el-icon>
                   <Download />
-                </el-icon>批量下载
+                </el-icon>下载选中文件
+              </el-button>
+            </el-col>
+            <el-col :span="3">
+              <el-button type="primary" round @click="dialogVisible1 = true">
+                <el-icon>
+                  <Share />
+                </el-icon>分享选中文件
               </el-button>
             </el-col>
             <el-col :span="2" @keydown.enter.stop>
@@ -145,7 +152,17 @@
             <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
             <el-table-column prop="size" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
           </el-table>
-
+          <el-dialog v-model="dialogVisible1" title="标题">
+            <el-form>
+              <el-form-item>
+                <el-input v-model="titleImput" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="batchShare(false)">链接分享</el-button>
+                <el-button type="primary" @click="batchShare(true)">链接及公开分享</el-button>
+              </el-form-item>
+            </el-form>
+          </el-dialog>
           <el-dialog v-model="dialogVisible2" title="文件夹命名">
             <el-form>
               <el-form-item>
@@ -156,7 +173,7 @@
               </el-form-item>
             </el-form>
           </el-dialog>
-          <el-dialog v-model="dialogVisible7" title="更换头像" headers.stop>
+          <el-dialog v-model="dialogVisible7" title="更换头像" headers.stop width="20%">
             <el-upload class="avatar-uploader" action="http://localhost:8081/file/uploadImage" :headers="{ token: jwt }"
               name="files" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
               <img v-if="imageUrl" :src="imageUrl" class="avatar" />
@@ -164,10 +181,11 @@
                 <Plus />
               </el-icon>
             </el-upload>
+            <br>
             <el-button>确认</el-button>
           </el-dialog>
-          <el-dialog v-model="dialogVisible8" title="个人信息">
-            <el-form :model="userInfo">
+          <el-dialog v-model="dialogVisible8" title="个人信息" width="30%">
+            <el-form :model="userInfo" label-width="auto">
               <el-form-item label="用户名">
                 <el-input v-model="userInfo.userName" disabled />
               </el-form-item>
@@ -176,8 +194,8 @@
               </el-form-item>
               <el-form-item label="修改密码">
                 <el-input v-model="newPassword" placeholder="新密码" />
-                <el-button @click="updatePassword(newPassword)">确认修改</el-button>
               </el-form-item>
+              <el-button @click="updatePassword(newPassword)">确认修改</el-button>
             </el-form>
           </el-dialog>
           <el-dialog v-model="dialogVisible9" title="分享管理">
@@ -193,7 +211,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets } from '@element-plus/icons-vue'
+import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets, Share } from '@element-plus/icons-vue'
 import { ref, /* reactive, toRefs, */ onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -217,11 +235,13 @@ const isHovered = ref(false);
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<File[]>([])
 const userSearchInput = ref('')
+const dialogVisible1 = ref(false)
 const dialogVisible2 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
 const input1 = ref('')
+const titleImput = ref('')
 const currentPath = ref('')
 const superiorPath = ref('')
 const tableData = ref([])
@@ -506,6 +526,25 @@ const batchDownload = () => {
       console.error('BatchDownload error:', error);
     })
 }
+const batchShare = (isOpen: boolean) => {
+  dialogVisible1.value = false
+  // 构建请求数据体
+  const requestData = {
+    title: titleImput.value,
+    files: selectedFileName.value,
+    open: isOpen
+  }
+  // 使用 Axios 发起分享文件请求
+  axios.post('http://localhost:8081/shareFile/share', requestData)
+    .then(response => {
+      // 处理分享成功的逻辑
+      console.log('AddFolder success:', response)
+    })
+    .catch(error => {
+      // 处理分享失败的逻辑
+      console.error('AddFolder error:', error)
+    })
+}
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
   response,
   uploadFile
@@ -568,5 +607,15 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   width: 178px;
   height: 178px;
   text-align: center;
+}
+
+/* 取消下拉蓝框 */
+.el-tooltip__trigger:focus-visible {
+  outline: unset;
+}
+
+/* 对话框标题对齐 */
+.el-dialog__header {
+  margin-right: unset;
 }
 </style>
