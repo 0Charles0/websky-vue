@@ -2,23 +2,45 @@
   <div class="common-layout">
     <el-container>
       <el-header style="padding-left:30px">
-        <el-button style="border:none;width:106px;height:50px;float:left"
-          :style="{ filter: isHovered ? 'brightness(1.1)' : '' }" @mouseover="isHovered = true"
-          @mouseout="isHovered = false" @click="refreshPage">
-          <img src="../../assets/logo.png" style="width:106px;height:50px;float:left" />
-        </el-button>
-        <el-dropdown @command="handleCommand" trigger="hover" style="float:right;margin-top:1%">
-          <el-button @click="dialogVisible7 = true" size="small" circle>
-            <el-avatar :size="size" :src="userInfo.image + '?' + Date.now()" />
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile" @click="dialogVisible8 = true">个人信息</el-dropdown-item>
-              <el-dropdown-item command="settings" @click="dialogVisible9 = true">分享管理</el-dropdown-item>
-              <el-dropdown-item command="logout" @click="logout">登出</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+        <el-row>
+          <el-col :span="8">
+            <el-button style="border:none;width:106px;height:50px;float:left"
+              :style="{ filter: isHovered ? 'brightness(1.1)' : '' }" @mouseover="isHovered = true"
+              @mouseout="isHovered = false" @click="refreshPage">
+              <img src="../../assets/logo.png" style="width:106px;height:50px;float:left" />
+            </el-button>
+          </el-col>
+          <el-col :span="8">
+            <div class="input_box">
+              <el-input v-model="shareSearchInput" size="small" placeholder="搜索共享资源" class="input-with-select"
+                style="border:none;box-shadow:none" @keydown.enter="shareSearch(shareSearchInput); dialogVisible4 = true">
+                <template #prepend>
+                  <el-button @click="shareSearch(shareSearchInput); dialogVisible4 = true">
+                    <el-icon>
+                      <Search />
+                    </el-icon>
+                  </el-button>
+                </template>
+              </el-input>
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <el-dropdown @command="handleCommand" trigger="hover" style="float:right;margin-top:1%">
+              <el-button @click="dialogVisible7 = true" size="small" circle>
+                <el-avatar :size="size" :src="userInfo.image + '?' + Date.now()" />
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile" @click="dialogVisible8 = true">个人信息</el-dropdown-item>
+                  <el-dropdown-item command="settings"
+                    @click="queryShare(); dialogVisible9 = true">分享管理</el-dropdown-item>
+                  <el-dropdown-item command="logout" @click="logout">登出</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </el-col>
+        </el-row>
+
       </el-header>
       <el-container>
         <el-aside>
@@ -101,7 +123,7 @@
             </el-col>
             <el-col :span="2" @keydown.enter.stop>
               <div class="input_box" style="margin-left:20px;width:250px">
-                <el-input v-model="userSearchInput" size="small" placeholder="Files to search" class="input-with-select"
+                <el-input v-model="userSearchInput" size="small" placeholder="搜索盘内资源" class="input-with-select"
                   style="border:none;box-shadow:none" @keydown.enter="userSearch(userSearchInput)">
                   <template #prepend>
                     <el-button @click="userSearch(userSearchInput)">
@@ -131,19 +153,19 @@
                   :icon="Folder" style="padding-left:0px">{{
                     scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
                   }}</el-button>
-                <el-link v-else-if="scope.row.category === '图片'" :href="scope.row.url" target="_blank"
+                <el-link v-else-if="scope.row.category === '图片'" :href="scope.row.url"
                   :icon="Picture">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
                   }}</el-link>
-                <el-link v-else-if="scope.row.category === '文档'" :href="scope.row.url" target="_blank"
+                <el-link v-else-if="scope.row.category === '文档'" :href="scope.row.url"
                   :icon="Document">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
                   }}</el-link>
-                <el-link v-else-if="scope.row.category === '视频'" :href="scope.row.url" target="_blank"
+                <el-link v-else-if="scope.row.category === '视频'" :href="scope.row.url"
                   :icon="VideoPlay">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
                   }}</el-link>
-                <el-link v-else-if="scope.row.category === '音频'" :href="scope.row.url" target="_blank"
+                <el-link v-else-if="scope.row.category === '音频'" :href="scope.row.url"
                   :icon="Headset">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
                   }}</el-link>
-                <el-link v-else-if="scope.row.category === '其它'" :href="scope.row.url" target="_blank"
+                <el-link v-else-if="scope.row.category === '其它'" :href="scope.row.url"
                   :icon="Tickets">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
                   }}</el-link>
 
@@ -173,6 +195,25 @@
               </el-form-item>
             </el-form>
           </el-dialog>
+          <el-dialog v-model="dialogVisible3">
+            <el-result icon="success" title="分享成功">
+              <template #extra>
+                <el-link href="shareLink" target="_blank">分享链接：{{ shareLink }}</el-link>
+                <el-button size="small" @click="onCopy()">复制</el-button>
+                <br>
+                <el-button type="primary" @click="closeDialogVisible3()">返回</el-button>
+              </template>
+            </el-result>
+          </el-dialog>
+          <el-dialog v-model="dialogVisible4" title="共享资源" width="20%">
+            <el-table :data="shareSearchFiles">
+              <el-table-column prop="title" label="标题">
+                <template #default="scope3">
+                  <el-link :href="scope3.row.url" target="_blank">{{ scope3.row.title }}</el-link>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-dialog>
           <el-dialog v-model="dialogVisible7" title="更换头像" headers.stop width="20%">
             <el-upload class="avatar-uploader" action="http://localhost:8081/file/uploadImage" :headers="{ token: jwt }"
               name="files" :show-file-list="false" :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload">
@@ -198,11 +239,17 @@
               <el-button @click="updatePassword(newPassword)">确认修改</el-button>
             </el-form>
           </el-dialog>
-          <el-dialog v-model="dialogVisible9" title="分享管理">
-            <el-form>
-              <el-form-item>
-              </el-form-item>
-            </el-form>
+          <el-dialog v-model="dialogVisible9" title="分享管理" width="20%">
+            <el-table :data="shareFiles">
+              <el-table-column prop="title" label="我的分享">
+                <template #default="scope2">
+                  <el-link :href="scope2.row.url" target="_blank">{{ scope2.row.title }}</el-link>
+                </template>
+              </el-table-column>
+              <el-table-column align="right">
+                <el-button>删除</el-button>
+              </el-table-column>
+            </el-table>
           </el-dialog>
         </el-main>
       </el-container>
@@ -235,8 +282,11 @@ const isHovered = ref(false);
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<File[]>([])
 const userSearchInput = ref('')
+const shareSearchInput = ref('')
 const dialogVisible1 = ref(false)
 const dialogVisible2 = ref(false)
+const dialogVisible3 = ref(false)
+const dialogVisible4 = ref(false)
 const dialogVisible7 = ref(false)
 const dialogVisible8 = ref(false)
 const dialogVisible9 = ref(false)
@@ -250,6 +300,9 @@ const selectedFileName = ref<string[]>([])
 const newPassword = ref('')
 const imageUrl = ref('')
 const jwt = ref(localStorage.getItem('token'))
+const shareLink = ref('')
+const shareFiles = ref([])
+const shareSearchFiles = ref([])
 const userInfo = ref<User>({
   userName: '',
   email: '',
@@ -264,6 +317,9 @@ onMounted(() => {
 /* const openLink = (url: string) => {
   window.open(url, '_blank');
 } */
+const closeDialogVisible3 = () => {
+  dialogVisible3.value = false
+}
 const refreshPage = () => {
   window.location.reload()
 }
@@ -482,6 +538,18 @@ const userSearch = async (userSearchName: string) => {
       console.error('UserSearch error:', error)
     })
 }
+const shareSearch = async (shareSearchName: string) => {
+  // 在组件挂载后获取数据
+  axios.get(`http://localhost:8081/shareFile/shareSearch?shareSearchName=${shareSearchName}`)
+    .then(response => {
+      shareSearchFiles.value = response.data.data
+      console.log('ShareSearch success:', response)
+    })
+    .catch(error => {
+      // 处理搜索失败的逻辑
+      console.error('ShareSearch error:', error)
+    })
+}
 const batchDeletion = () => {
   // 使用 Axios 发起批量删除请求
   axios.delete('http://localhost:8081/file/delete', {
@@ -538,11 +606,26 @@ const batchShare = (isOpen: boolean) => {
   axios.post('http://localhost:8081/shareFile/share', requestData)
     .then(response => {
       // 处理分享成功的逻辑
-      console.log('AddFolder success:', response)
+      shareLink.value = response.data.data
+      dialogVisible3.value = true
+      console.log('Share success:', response)
     })
     .catch(error => {
       // 处理分享失败的逻辑
-      console.error('AddFolder error:', error)
+      console.error('Share error:', error)
+    })
+}
+const queryShare = () => {
+  // 使用 Axios 发起查询已分享文件请求
+  axios.get('http://localhost:8081/shareFile/queryShare')
+    .then(response => {
+      // 处理查询成功的逻辑
+      shareFiles.value = response.data.data
+      console.log('QueryShare success:', response)
+    })
+    .catch(error => {
+      // 处理查询失败的逻辑
+      console.error('QueryShare error:', error)
     })
 }
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
@@ -561,6 +644,15 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
     return false
   }
   return true
+}
+const onCopy = () => {
+  navigator.clipboard.writeText(shareLink.value)
+    .then(() => {
+      console.log('复制成功');
+    })
+    .catch((err) => {
+      console.error('复制失败:', err);
+    });
 }
 </script>
 
