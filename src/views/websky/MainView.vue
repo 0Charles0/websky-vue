@@ -31,7 +31,7 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="profile" @click="dialogVisible8 = true">个人信息</el-dropdown-item>
+                  <el-dropdown-item command="profile" @click="queryUser(); dialogVisible8 = true">个人信息</el-dropdown-item>
                   <el-dropdown-item command="settings"
                     @click="queryShare(); dialogVisible9 = true">分享管理</el-dropdown-item>
                   <el-dropdown-item command="logout" @click="logout">登出</el-dropdown-item>
@@ -48,12 +48,12 @@
             <el-sub-menu index="1">
               <template #title>
                 <el-icon>
-                  <Files />
-                </el-icon>我的文件
+                  <MostlyCloudy />
+                </el-icon>我的云盘
               </template>
               <el-menu-item index="1-1" @click="queryFiles('/')"><el-icon>
-                  <Menu />
-                </el-icon>全部</el-menu-item>
+                  <Files />
+                </el-icon>我的文件</el-menu-item>
               <el-menu-item index="1-2" @click="queryCategory('图片')"><el-icon>
                   <Picture />
                 </el-icon>图片</el-menu-item>
@@ -153,52 +153,51 @@
                   :icon="Folder" style="padding-left:0px">{{
                     scope.row.fileName.slice(0, -1).slice(scope.row.fileName.slice(0, -1).lastIndexOf('/') + 1)
                   }}</el-button>
-                <el-link v-else-if="scope.row.category === '图片'" :href="scope.row.url"
-                  :icon="Picture">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
-                  }}</el-link>
-                <el-link v-else-if="scope.row.category === '文档'" :href="scope.row.url"
-                  :icon="Document">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
-                  }}</el-link>
-                <el-link v-else-if="scope.row.category === '视频'" :href="scope.row.url"
-                  :icon="VideoPlay">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
-                  }}</el-link>
-                <el-link v-else-if="scope.row.category === '音频'" :href="scope.row.url"
-                  :icon="Headset">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
-                  }}</el-link>
-                <el-link v-else-if="scope.row.category === '其它'" :href="scope.row.url"
-                  :icon="Tickets">&nbsp;&nbsp;{{ scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
-                  }}</el-link>
+                <el-link v-else-if="scope.row.category === '图片'" :href="scope.row.url" :icon="Picture">&nbsp;&nbsp;{{
+                  scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                }}</el-link>
+                <el-link v-else-if="scope.row.category === '文档'" :href="scope.row.url" :icon="Document">&nbsp;&nbsp;{{
+                  scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                }}</el-link>
+                <el-link v-else-if="scope.row.category === '视频'" :href="scope.row.url" :icon="VideoPlay">&nbsp;&nbsp;{{
+                  scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                }}</el-link>
+                <el-link v-else-if="scope.row.category === '音频'" :href="scope.row.url" :icon="Headset">&nbsp;&nbsp;{{
+                  scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                }}</el-link>
+                <el-link v-else-if="scope.row.category === '其它'" :href="scope.row.url" :icon="Tickets">&nbsp;&nbsp;{{
+                  scope.row.fileName.slice(scope.row.fileName.lastIndexOf('/') + 1)
+                }}</el-link>
 
               </template>
             </el-table-column>
             <el-table-column prop="updateTime" label="修改时间" sortable width="500" />
             <el-table-column prop="size" label="大小" :formatter="formatter" show-overflow-tooltip sortable />
           </el-table>
-          <el-dialog v-model="dialogVisible1" title="标题">
-            <el-form>
-              <el-form-item>
-                <el-input v-model="titleImput" />
-              </el-form-item>
-              <el-form-item>
+          <el-dialog v-model="dialogVisible1" title="标题" width="30%">
+            <el-input v-model="titleImput" />
+            <br>
+            <br>
+            <el-row>
+              <el-col :span="12">
                 <el-button type="primary" @click="batchShare(false)">链接分享</el-button>
+              </el-col>
+              <el-col :span="12">
                 <el-button type="primary" @click="batchShare(true)">链接及公开分享</el-button>
-              </el-form-item>
-            </el-form>
+              </el-col>
+            </el-row>
           </el-dialog>
-          <el-dialog v-model="dialogVisible2" title="文件夹命名">
-            <el-form>
-              <el-form-item>
-                <el-input v-model="input1" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="onSubmit1">创建</el-button>
-              </el-form-item>
-            </el-form>
+          <el-dialog v-model="dialogVisible2" title="文件夹命名" width="30%">
+            <el-input v-model="input1" />
+            <br>
+            <br>
+            <el-button type="primary" @click="onSubmit1">创建</el-button>
           </el-dialog>
           <el-dialog v-model="dialogVisible3">
             <el-result icon="success" title="分享成功">
               <template #extra>
-                <el-link href="shareLink" target="_blank">分享链接：{{ shareLink }}</el-link>
+                <!-- <router-link to="shareLink">{{ shareLink }}</router-link> -->
+                <el-link :href="shareLink" target="_blank">{{ shareLink }}</el-link>
                 <el-button size="small" @click="onCopy()">复制</el-button>
                 <br>
                 <el-button type="primary" @click="closeDialogVisible3()">返回</el-button>
@@ -223,20 +222,36 @@
               </el-icon>
             </el-upload>
             <br>
-            <el-button>确认</el-button>
           </el-dialog>
           <el-dialog v-model="dialogVisible8" title="个人信息" width="30%">
             <el-form :model="userInfo" label-width="auto">
-              <el-form-item label="用户名">
-                <el-input v-model="userInfo.userName" disabled />
-              </el-form-item>
-              <el-form-item label="邮箱">
-                <el-input v-model="userInfo.email" disabled />
-              </el-form-item>
-              <el-form-item label="修改密码">
-                <el-input v-model="newPassword" placeholder="新密码" />
-              </el-form-item>
-              <el-button @click="updatePassword(newPassword)">确认修改</el-button>
+              <el-row>
+                <el-col :span="20">
+                  <el-form-item label="邮箱">
+                    <el-input v-model="userInfo.email" disabled />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="20">
+                  <el-form-item label="用户名">
+                    <el-input v-model="userInfo.userName" placeholder="新用户名" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="4">
+                  <el-button @click="updateUserName(userInfo.userName)">修改</el-button>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="20">
+                  <el-form-item label="修改密码">
+                    <el-input v-model="newPassword" placeholder="新密码" type="password" show-password />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="4">
+                  <el-button @click="updatePassword(newPassword)">修改</el-button>
+                </el-col>
+              </el-row>
             </el-form>
           </el-dialog>
           <el-dialog v-model="dialogVisible9" title="分享管理" width="20%">
@@ -247,7 +262,11 @@
                 </template>
               </el-table-column>
               <el-table-column align="right">
-                <el-button>删除</el-button>
+                <template #default="scope2">
+                  <el-button @click="deleteShare(scope2.row.shareFileId)">
+                    删除
+                  </el-button>
+                </template>
               </el-table-column>
             </el-table>
           </el-dialog>
@@ -258,7 +277,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Files, Menu, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets, Share } from '@element-plus/icons-vue'
+import { MostlyCloudy, Files, Picture, Document, VideoPlay, Headset, More, Upload, FolderAdd, Delete, Download, Search, Back, Folder, Tickets, Share } from '@element-plus/icons-vue'
 import { ref, /* reactive, toRefs, */ onMounted } from 'vue'
 import { ElTable, ElMessage, /* ElMessageBox */ } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -310,8 +329,17 @@ const userInfo = ref<User>({
 })
 
 onMounted(() => {
-  queryFiles(currentPath.value)
-  queryUser()
+  axios.get('http://localhost:8081/welcome')
+    .then(response => {
+      // 验证成功，处理逻辑...
+      console.log('Verify success:', response)
+      queryFiles(currentPath.value)
+      queryUser()
+    })
+    .catch(error => {
+      // 验证失败，处理逻辑...
+      console.error('Verify error:', error)
+    })
 })
 
 /* const openLink = (url: string) => {
@@ -526,6 +554,19 @@ const updatePassword = async (newPassword: string) => {
       console.error('Update error:', error)
     })
 }
+const updateUserName = async (newUserName: string) => {
+  const data = new FormData()
+  data.append('userName', newUserName)
+  axios.patch('http://localhost:8081/user/updateUserName', data)
+    .then(response => {
+      ElMessage.success(response.data.msg)
+      console.log('Update success:', response)
+    })
+    .catch(error => {
+      ElMessage.error(error.data.code + " Error：" + error.data.msg)
+      console.error('Update error:', error)
+    })
+}
 const userSearch = async (userSearchName: string) => {
   // 在组件挂载后获取数据
   axios.get(`http://localhost:8081/file/userSearch?userSearchName=${userSearchName}`)
@@ -626,6 +667,23 @@ const queryShare = () => {
     .catch(error => {
       // 处理查询失败的逻辑
       console.error('QueryShare error:', error)
+    })
+}
+const deleteShare = (shareFileId: string) => {
+  // 使用 Axios 发起删除分享文件请求
+  /* axios.delete('http://localhost:8081/shareFile/delete', {
+    data: shareFileId
+  }) */
+  axios.delete(`http://localhost:8081/shareFile/delete?shareFileId=${shareFileId}`)
+    .then(response => {
+      // 处理删除成功的逻辑
+      shareFiles.value = response.data.data
+      console.log('DeleteShare success:', response)
+      queryShare()
+    })
+    .catch(error => {
+      // 处理删除失败的逻辑
+      console.error('DeleteShare error:', error)
     })
 }
 const handleAvatarSuccess: UploadProps['onSuccess'] = (
