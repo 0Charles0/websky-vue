@@ -26,7 +26,7 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (response) => {
     if (response.data.code !== 200) {
-      if (response.data.code === 401 || response.data.code === 403) {
+      if (response.data.code === 400 || response.data.code === 401 || response.data.code === 403) {
         // 处理 401/403 错误，清除 token 并跳转到登录页面
         ElMessage.error(response.data.code + " Error：" + response.data.msg)
         localStorage.removeItem('token');

@@ -99,8 +99,15 @@ onMounted(() => {
     const shareFileIdArray = Array.isArray(shareFileIdParam) ? shareFileIdParam : [shareFileIdParam]    // 使用类型断言来明确告诉 TypeScript 变量的类型
     const shareFileId = shareFileIdArray[0].split(":")[0] // 然后再调用 split 方法
     console.log(shareFileId)
-    queryFiles(shareFileId)
-    queryUser()
+
+    axios.get('http://localhost:8081/welcome')
+        .then(response => {
+            // 验证成功，处理逻辑...
+            if (response.data.code === 200) {
+                queryFiles(shareFileId)
+                queryUser()
+            }
+        })
 })
 
 const logout = () => {

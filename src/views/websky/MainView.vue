@@ -12,7 +12,7 @@
           </el-col>
           <el-col :span="8">
             <div class="input_box">
-              <el-input v-model="shareSearchInput" size="small" placeholder="搜索共享资源" class="input-with-select"
+              <el-input v-model="shareSearchInput" size="small" placeholder="搜索共享文件" class="input-with-select"
                 style="border:none;box-shadow:none" @keydown.enter="shareSearch(shareSearchInput); dialogVisible4 = true">
                 <template #prepend>
                   <el-button @click="shareSearch(shareSearchInput); dialogVisible4 = true">
@@ -123,7 +123,7 @@
             </el-col>
             <el-col :span="2" @keydown.enter.stop>
               <div class="input_box" style="margin-left:20px;width:250px">
-                <el-input v-model="userSearchInput" size="small" placeholder="搜索盘内资源" class="input-with-select"
+                <el-input v-model="userSearchInput" size="small" placeholder="搜索盘内文件" class="input-with-select"
                   style="border:none;box-shadow:none" @keydown.enter="userSearch(userSearchInput)">
                   <template #prepend>
                     <el-button @click="userSearch(userSearchInput)">
@@ -183,7 +183,7 @@
                 <el-button type="primary" @click="batchShare(false)">链接分享</el-button>
               </el-col>
               <el-col :span="12">
-                <el-button type="primary" @click="batchShare(true)">链接及公开分享</el-button>
+                <el-button type="primary" @click="batchShare(true)">共享文件</el-button>
               </el-col>
             </el-row>
           </el-dialog>
@@ -193,18 +193,20 @@
             <br>
             <el-button type="primary" @click="onSubmit1">创建</el-button>
           </el-dialog>
-          <el-dialog v-model="dialogVisible3">
+          <el-dialog v-model="dialogVisible3" width="30%">
             <el-result icon="success" title="分享成功">
               <template #extra>
                 <!-- <router-link to="shareLink">{{ shareLink }}</router-link> -->
                 <el-link :href="shareLink" target="_blank">{{ shareLink }}</el-link>
+                &nbsp;
                 <el-button size="small" @click="onCopy()">复制</el-button>
+                <br>
                 <br>
                 <el-button type="primary" @click="closeDialogVisible3()">返回</el-button>
               </template>
             </el-result>
           </el-dialog>
-          <el-dialog v-model="dialogVisible4" title="共享资源" width="20%">
+          <el-dialog v-model="dialogVisible4" title="共享文件" width="20%">
             <el-table :data="shareSearchFiles">
               <el-table-column prop="title" label="标题">
                 <template #default="scope3">
@@ -332,13 +334,10 @@ onMounted(() => {
   axios.get('http://localhost:8081/welcome')
     .then(response => {
       // 验证成功，处理逻辑...
-      console.log('Verify success:', response)
-      queryFiles(currentPath.value)
-      queryUser()
-    })
-    .catch(error => {
-      // 验证失败，处理逻辑...
-      console.error('Verify error:', error)
+      if (response.data.code === 200) {
+        queryFiles(currentPath.value)
+        queryUser()
+      }
     })
 })
 
